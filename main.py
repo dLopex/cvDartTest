@@ -223,6 +223,168 @@
 # cap.release()
 # cv2.destroyAllWindows()
 
+# import cv2
+# import numpy as np
+
+# # Initialize the webcam
+# cap = cv2.VideoCapture(0)
+
+# # Check if the webcam is opened correctly
+# if not cap.isOpened():
+#     print("Error: Could not open webcam.")
+#     exit()
+
+# # Initialize the background subtractor
+# background_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
+
+# print("Adjusting camera, please wait...")
+# cv2.waitKey(2000)
+
+# print("Background modeling started. Throw darts and press 's' to detect.")
+
+# while True:
+#     # Capture the current frame
+#     ret, frame = cap.read()
+#     if not ret:
+#         print("Error: Failed to capture frame.")
+#         break
+
+#     # Apply the background subtractor to get the foreground mask
+#     fg_mask = background_subtractor.apply(frame)
+
+#     # Apply some morphological operations to reduce noise in the foreground mask
+#     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+#     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_CLOSE, kernel)
+#     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
+
+#     # Find contours in the foreground mask
+#     contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+#     # Draw contours around detected darts and look for triangles
+#     for contour in contours:
+#         # if cv2.contourArea(contour) < 500:  # Filter out small contours that might be noise
+#         #     continue
+
+#         # Approximate the contour to a simpler shape
+#         epsilon = 0.04 * cv2.arcLength(contour, True)
+#         approx = cv2.approxPolyDP(contour, epsilon, True)
+
+#         # Check if the approximated contour has 3 vertices (indicating a triangle)
+#         if len(approx) == 3:
+#             # Draw the triangle in blue on the mask
+#             cv2.drawContours(fg_mask, [approx], 0, (255), 3)
+
+#             # Optionally, label the triangle on the frame
+#             x, y, w, h = cv2.boundingRect(approx)
+#             cv2.putText(frame, 'Triangle', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+#         else:
+#             # Draw bounding box around other contours that aren't triangles
+#             (x, y, w, h) = cv2.boundingRect(contour)
+#             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            
+#             # Optionally, draw the contour itself
+#             cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+
+#     # Display the live feed with detections and the foreground mask with detected triangles
+#     cv2.imshow("Live Feed", frame)
+#     #cv2.imshow("Foreground Mask", fg_mask)
+    
+#     # Check for user input to show the detection result or exit
+#     key = cv2.waitKey(1) & 0xFF
+#     if key == ord('q'):  # Press 'q' to quit
+#         break
+#     elif key == ord('s'):  # Press 's' to show the detection result
+#         # Show the thresholded mask and the current frame with contours
+#         cv2.imshow("Foreground Mask", fg_mask)
+
+# # Release resources
+# cap.release()
+# cv2.destroyAllWindows()
+
+# import cv2
+# import numpy as np
+
+# # Initialize the webcam
+# cap = cv2.VideoCapture(0)
+
+# # Check if the webcam is opened correctly
+# if not cap.isOpened():
+#     print("Error: Could not open webcam.")
+#     exit()
+
+# # Initialize the background subtractor
+# background_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
+
+# print("Adjusting camera, please wait...")
+# cv2.waitKey(2000)
+
+# print("Background modeling started. Dart detection is active.")
+
+# while True:
+#     # Capture the current frame
+#     ret, frame = cap.read()
+#     if not ret:
+#         print("Error: Failed to capture frame.")
+#         break
+
+#     # Apply the background subtractor to get the foreground mask
+#     fg_mask = background_subtractor.apply(frame)
+
+#     # Apply some morphological operations to reduce noise in the foreground mask
+#     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))
+#     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_CLOSE, kernel)
+#     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
+
+
+#     # Find contours in the foreground mask
+#     contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+#     dart_detected = False  # Flag to check if a dart is detected
+
+#     # Draw contours around detected darts and look for triangles
+#     for contour in contours:
+#         if cv2.contourArea(contour) < 1000:  # Filter out small contours that might be noise
+#             continue
+
+#         # Approximate the contour to a simpler shape
+#         epsilon = 0.04 * cv2.arcLength(contour, True)
+#         approx = cv2.approxPolyDP(contour, epsilon, True)
+
+#         # Check if the approximated contour has 3 vertices (indicating a triangle)
+#         if len(approx) == 3:
+#             dart_detected = True  # A dart is detected
+#             # Draw the triangle in blue on the mask
+#             cv2.drawContours(fg_mask, [approx], 0, (255), 3)
+
+#             # Optionally, label the triangle on the frame
+#             x, y, w, h = cv2.boundingRect(approx)
+#             cv2.putText(frame, 'Triangle (Dart)', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+#             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+#         else:
+#             # Draw bounding box around other contours that aren't triangles
+#             (x, y, w, h) = cv2.boundingRect(contour)
+#             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            
+#             # Optionally, draw the contour itself
+#             cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+
+#     # If a dart is detected, save the frame for analysis
+#     if dart_detected:
+#         cv2.imwrite('dart_detected.png', frame)
+#         print("Dart detected! Image saved as dart_detected.png")
+
+#     # Display the live feed with detections and the foreground mask with detected triangles
+#     cv2.imshow("Live Feed", frame)
+    
+#     # Check for user input to exit
+#     key = cv2.waitKey(1) & 0xFF
+#     if key == ord('q'):  # Press 'q' to quit
+#         break
+
+# # Release resources
+# cap.release()
+# cv2.destroyAllWindows()
+
 import cv2
 import numpy as np
 
@@ -235,12 +397,12 @@ if not cap.isOpened():
     exit()
 
 # Initialize the background subtractor
-background_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
+background_subtractor = cv2.createBackgroundSubtractorMOG2()
 
 print("Adjusting camera, please wait...")
 cv2.waitKey(2000)
 
-print("Background modeling started. Throw darts and press 's' to detect.")
+print("Background modeling started. Dart detection is active.")
 
 while True:
     # Capture the current frame
@@ -253,49 +415,56 @@ while True:
     fg_mask = background_subtractor.apply(frame)
 
     # Apply some morphological operations to reduce noise in the foreground mask
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))  # Basic noise reduction
     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_CLOSE, kernel)
     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
 
     # Find contours in the foreground mask
     contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Draw contours around detected darts and look for triangles
+    dart_detected = False  # Flag to check if a dart is detected
+
+    # Look for triangles among the detected contours
     for contour in contours:
-        # if cv2.contourArea(contour) < 500:  # Filter out small contours that might be noise
-        #     continue
+        if cv2.contourArea(contour) < 1000:  # Filter out small contours that might be noise
+            continue
 
         # Approximate the contour to a simpler shape
-        epsilon = 0.04 * cv2.arcLength(contour, True)
+        epsilon = 0.08 * cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
 
         # Check if the approximated contour has 3 vertices (indicating a triangle)
         if len(approx) == 3:
-            # Draw the triangle in blue on the mask
-            cv2.drawContours(fg_mask, [approx], 0, (255), 3)
-
-            # Optionally, label the triangle on the frame
-            x, y, w, h = cv2.boundingRect(approx)
-            cv2.putText(frame, 'Triangle', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-        else:
-            # Draw bounding box around other contours that aren't triangles
-            (x, y, w, h) = cv2.boundingRect(contour)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            dart_detected = True  # A dart is detected
             
-            # Optionally, draw the contour itself
-            cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+            # Draw the triangle based on the approximated contour
+            cv2.drawContours(frame, [approx], 0, (255, 0, 0), 3)
 
-    # Display the live feed with detections and the foreground mask with detected triangles
+            # Calculate the centroid of the triangle to represent the dart point
+            M = cv2.moments(approx)
+            if M["m00"] != 0:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+            else:
+                cX, cY = 0, 0
+            
+            # Draw a circle at the centroid to indicate the point of the dart
+            cv2.circle(frame, (cX, cY), 5, (0, 0, 255), -1)
+            cv2.putText(frame, "Dart Point", (cX - 20, cY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+    # If a dart is detected, save the frame for analysis
+    if dart_detected:
+        cv2.imwrite('dart_detected.png', frame)
+        print("Dart detected! Image saved as dart_detected.png")
+
+    # Display the live feed with the detected dart and the triangle
     cv2.imshow("Live Feed", frame)
-    #cv2.imshow("Foreground Mask", fg_mask)
-    
-    # Check for user input to show the detection result or exit
+    cv2.imshow("test", fg_mask)
+
+    # Check for user input to exit
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):  # Press 'q' to quit
         break
-    elif key == ord('s'):  # Press 's' to show the detection result
-        # Show the thresholded mask and the current frame with contours
-        cv2.imshow("Foreground Mask", fg_mask)
 
 # Release resources
 cap.release()
