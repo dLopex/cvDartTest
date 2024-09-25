@@ -397,7 +397,10 @@ if not cap.isOpened():
     exit()
 
 # Initialize the background subtractor
-background_subtractor = cv2.createBackgroundSubtractorMOG2()
+background_subtractor = cv2.createBackgroundSubtractorMOG2()#detectShadows=True)
+
+previous_frame = None
+significant_change_threshold = 4000  # Threshold to detect significant changes
 
 print("Adjusting camera, please wait...")
 cv2.waitKey(2000)
@@ -415,51 +418,59 @@ while True:
     fg_mask = background_subtractor.apply(frame)
 
     # Apply some morphological operations to reduce noise in the foreground mask
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))  # Basic noise reduction
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 1))  # Basic noise reduction
     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_CLOSE, kernel)
     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
 
-    # Find contours in the foreground mask
-    contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Calculate the absolute difference between the current frame and the previous frame
+    if previous_frame is not None:
+        diff = cv2.absdiff(fg_mask, previous_frame)
+        change = np.sum(diff)
 
-    dart_detected = False  # Flag to check if a dart is detected
+        # Check if the change is significant
+        if change > significant_change_threshold:
+            # Find contours in the foreground mask
+            contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Look for triangles among the detected contours
-    for contour in contours:
-        if cv2.contourArea(contour) < 1000:  # Filter out small contours that might be noise
-            continue
+            dart_detected = False  # Flag to check if a dart is detected
 
-        # Approximate the contour to a simpler shape
-        epsilon = 0.08 * cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, epsilon, True)
+            # Look for triangles among the detected contours
+            for contour in contours:
+                if cv2.contourArea(contour) < 1000:  # Filter out small contours that might be noise
+                    continue
 
-        # Check if the approximated contour has 3 vertices (indicating a triangle)
-        if len(approx) == 3:
-            dart_detected = True  # A dart is detected
-            
-            # Draw the triangle based on the approximated contour
-            cv2.drawContours(frame, [approx], 0, (255, 0, 0), 3)
+                # Approximate the contour to a simpler shape
+                epsilon = 0.04 * cv2.arcLength(contour, True)
+                approx = cv2.approxPolyDP(contour, epsilon, True)
 
-            # Calculate the centroid of the triangle to represent the dart point
-            M = cv2.moments(approx)
-            if M["m00"] != 0:
-                cX = int(M["m10"] / M["m00"])
-                cY = int(M["m01"] / M["m00"])
-            else:
-                cX, cY = 0, 0
-            
-            # Draw a circle at the centroid to indicate the point of the dart
-            cv2.circle(frame, (cX, cY), 5, (0, 0, 255), -1)
-            cv2.putText(frame, "Dart Point", (cX - 20, cY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                # Check if the approximated contour has 3 vertices (indicating a triangle)
+                if len(approx) == 3:
+                    dart_detected = True  # A dart is detected
+                    
+                    # Draw the triangle based on the approximated contour
+                    cv2.drawContours(frame, [approx], 0, (255, 0, 0), 3)
 
-    # If a dart is detected, save the frame for analysis
-    if dart_detected:
-        cv2.imwrite('dart_detected.png', frame)
-        print("Dart detected! Image saved as dart_detected.png")
+                    # Calculate the centroid of the triangle to represent the dart point
+                    M = cv2.moments(approx)
+                    if M["m00"] != 0:
+                        cX = int(M["m10"] / M["m00"])
+                        cY = int(M["m01"] / M["m00"])
+                    else:
+                        cX, cY = 0, 0
+                    
+                    # Draw a circle at the centroid to indicate the point of the dart
+                    cv2.circle(frame, (cX, cY), 5, (0, 0, 255), -1)
+                    cv2.putText(frame, "Dart Point", (cX - 20, cY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-    # Display the live feed with the detected dart and the triangle
-    cv2.imshow("Live Feed", frame)
-    cv2.imshow("test", fg_mask)
+                    # Save the frame with the detected dart
+                    cv2.imwrite('dart_detected.png', frame)
+                    print("Dart detected! Image saved as dart_detected.png")
+
+            # Display the live feed with the detected dart and the triangle
+            cv2.imshow("Live Feed", frame)
+
+    # Update the previous frame
+    previous_frame = fg_mask.copy()
 
     # Check for user input to exit
     key = cv2.waitKey(1) & 0xFF
